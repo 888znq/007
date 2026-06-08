@@ -542,23 +542,36 @@
       });
 
       setStatus('Fetching call info...', 'connecting');
-
-      const callData = (await getDoc(callDoc)).data();
-      if (!callData?.offer) {
-        setStatus('Call ID not found. Check and try again.', 'error');
-        joinCallBtn.disabled = false;
-        return;
-      }
-
-      await pc.setRemoteDescription(new RTCSessionDescription(callData.offer));
-
-      // Now create and send answer
-      const answerDesc = await pc.createAnswer();
-      await pc.setLocalDescription(answerDesc);
-      await updateDoc(callDoc, { answer: { sdp: answerDesc.sdp, type: answerDesc.type } });
-
-      setStatus('Answer sent. Establishing connection...', 'connecting');
-    };
+      
+            let callData;
+            try {
+              const snap = await getDoc(callDoc);
+              callData = snap.data();
+            } catch (err) {
+              setStatus('Firestore error: ' + (err.message || err.code || 'check API key & rules'), 'error');
+              console.error('getDoc failed:', err);
+              joinCallBtn.disabled = false;
+              return;
+            }
+      
+            if (!callData?.offer) {
+              setStatus('Call ID not found. Check and try again.', 'error');
+              joinCallBtn.disabled = false;
+              return;
+            }
+      
+            try {
+              await pc.setRemoteDescription(new RTCSessionDescription(callData.offer));
+              const answerDesc = await pc.createAnswer();
+              await pc.setLocalDescription(answerDesc);
+              await updateDoc(callDoc, { answer: { sdp: answerDesc.sdp, type: answerDesc.type } });
+              setStatus('Answer sent. Establishing connection...', 'connecting');
+            } catch (err) {
+              setStatus('SDP/update error: ' + (err.message || err), 'error');
+              console.error('SDP error:', err);
+              joinCallBtn.disabled = false;
+            }
+          };
 
     // Copy button
     copyBtn.onclick = () => {
