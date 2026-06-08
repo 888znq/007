@@ -351,7 +351,7 @@
     <div class="footer">requires microphone access · https only</div>
   </div>
 
-  <audio id="remoteAudio" autoplay></audio>
+  <audio id="remoteAudio" autoplay playsinline></audio>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -447,9 +447,10 @@
       localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
       pc.ontrack = event => {
-        event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track));
-        remoteAudio.srcObject = remoteStream;
-      };
+              event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track));
+              remoteAudio.srcObject = remoteStream;
+              remoteAudio.play().catch(e => console.warn('Audio play blocked:', e));
+            };
 
       attachConnectionHandlers(pc);
       return pc;
