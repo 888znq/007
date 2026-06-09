@@ -290,13 +290,57 @@
     }
 
     .footer {
-      text-align: center;
-      font-size: 0.72rem;
-      color: var(--muted);
-      font-family: 'IBM Plex Mono', monospace;
-      padding-bottom: 0.5rem;
-    }
-  </style>
+          text-align: center;
+          font-size: 0.72rem;
+          color: var(--muted);
+          font-family: 'IBM Plex Mono', monospace;
+          padding-bottom: 0.5rem;
+        }
+    
+        /* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(14, 14, 16, 0.85);
+          backdrop-filter: blur(4px);
+          display: none;
+          align-items: center;
+          justify-content: center;
+          z-index: 100;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+        .modal-overlay.active {
+          display: flex;
+          opacity: 1;
+        }
+        .modal {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 1.5rem;
+          width: 90%;
+          max-width: 360px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+          transform: translateY(20px);
+          transition: transform 0.2s ease;
+        }
+        .modal-overlay.active .modal {
+          transform: translateY(0);
+        }
+        .modal-title {
+          font-family: 'IBM Plex Mono', monospace;
+          color: var(--accent);
+          margin-bottom: 1rem;
+          font-size: 1rem;
+        }
+        .modal-actions {
+          display: flex;
+          gap: 0.5rem;
+          margin-top: 1rem;
+          justify-content: flex-end;
+        }
+      </style>
 </head>
 <body>
 
@@ -326,9 +370,10 @@
       <button class="btn btn-full" id="startCallBtn">Generate Call ID</button>
       <div id="callIdSection" style="margin-top: 0.75rem; display: none;">
         <div class="input-row">
-          <input type="text" id="generatedCallId" readonly placeholder="Call ID will appear here">
-          <button class="btn" id="copyBtn" title="Copy ID">Copy</button>
-        </div>
+                  <input type="text" id="generatedCallId" readonly placeholder="Call ID will appear here">
+                  <button class="btn" id="copyBtn" title="Copy ID">Copy</button>
+                  <button class="btn" id="smsBtn" title="Send via SMS">SMS</button>
+                </div>
         <p class="copy-hint">Share this ID with the other person</p>
       </div>
     </div>
@@ -351,7 +396,18 @@
     <div class="footer">requires microphone access · https only</div>
   </div>
 
-  <audio id="remoteAudio" autoplay playsinline></audio>
+  <div class="modal-overlay" id="smsModal">
+      <div class="modal">
+        <div class="modal-title">Send Code via SMS</div>
+        <input type="text" id="smsPhoneInput" placeholder="Enter mobile number" autocomplete="tel">
+        <div class="modal-actions">
+          <button class="btn" id="cancelSmsBtn" style="background: transparent; color: var(--text); border-color: var(--border);">Cancel</button>
+          <button class="btn" id="sendSmsBtn">Send</button>
+        </div>
+      </div>
+    </div>
+  
+    <audio id="remoteAudio" autoplay playsinline></audio>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -391,7 +447,12 @@
     const statusBar       = document.getElementById('statusBar');
     const statusText      = document.getElementById('statusText');
     const copyBtn         = document.getElementById('copyBtn');
-    const waveform        = document.getElementById('waveform');
+        const waveform        = document.getElementById('waveform');
+        var smsBtn          = document.getElementById('smsBtn');
+        var smsModal        = document.getElementById('smsModal');
+        var smsPhoneInput   = document.getElementById('smsPhoneInput');
+        var cancelSmsBtn    = document.getElementById('cancelSmsBtn');
+        var sendSmsBtn      = document.getElementById('sendSmsBtn');
 
     function setStatus(msg, state = '') {
       statusText.textContent = msg;
@@ -460,50 +521,50 @@
     // START CALL (Caller side)
     // ──────────────────────────────────────────────
     startCallBtn.onclick = async () => {
-      startCallBtn.disabled = true;
-
-      const ok = await setupMedia();
-      if (!ok) { startCallBtn.disabled = false; return; }
-
-      createPeerConnection();
-
-      const callId    = Math.random().toString(36).substring(2, 9);
-      const callDoc   = doc(collection(db, 'calls'), callId);
-      const offerCands = collection(callDoc, 'offerCandidates');
-      const answerCands = collection(callDoc, 'answerCandidates');
-
-      generatedCallId.value = callId;
-      callIdSection.style.display = 'block';
-      setStatus('Waiting for friend to join...', 'connecting');
-
-      // FIX: Collect ICE candidates BEFORE creating offer
-      pc.onicecandidate = event => {
-        if (event.candidate) {
-          addDoc(offerCands, event.candidate.toJSON());
-        }
-      };
-
-      const offerDesc = await pc.createOffer();
-      await pc.setLocalDescription(offerDesc);
-      await setDoc(callDoc, { offer: { sdp: offerDesc.sdp, type: offerDesc.type } });
-
-      // Listen for Answer
-      onSnapshot(callDoc, snapshot => {
-        const data = snapshot.data();
-        if (!pc.currentRemoteDescription && data?.answer) {
-          pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-        }
-      });
-
-      // FIX: Listen for remote ICE candidates (answer side)
-      onSnapshot(answerCands, snapshot => {
-        snapshot.docChanges().forEach(change => {
-          if (change.type === 'added') {
-            pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
-          }
-        });
-      });
-    };
+          startCallBtn.disabled = true;
+    
+          var ok = await setupMedia();
+          if (!ok) { startCallBtn.disabled = false; return; }
+    
+          createPeerConnection();
+    
+          var callId    = Math.floor(1000000 + Math.random() * 9000000).toString();
+          var callDoc   = doc(collection(db, 'calls'), callId);
+          var offerCands = collection(callDoc, 'offerCandidates');
+          var answerCands = collection(callDoc, 'answerCandidates');
+    
+          generatedCallId.value = callId;
+          callIdSection.style.display = 'block';
+          setStatus('Waiting for friend to join...', 'connecting');
+    
+          // FIX: Collect ICE candidates BEFORE creating offer
+          pc.onicecandidate = event => {
+            if (event.candidate) {
+              addDoc(offerCands, event.candidate.toJSON());
+            }
+          };
+    
+          var offerDesc = await pc.createOffer();
+          await pc.setLocalDescription(offerDesc);
+          await setDoc(callDoc, { offer: { sdp: offerDesc.sdp, type: offerDesc.type } });
+    
+          // Listen for Answer
+          onSnapshot(callDoc, snapshot => {
+            var data = snapshot.data();
+            if (!pc.currentRemoteDescription && data?.answer) {
+              pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+            }
+          });
+    
+          // FIX: Listen for remote ICE candidates (answer side)
+          onSnapshot(answerCands, snapshot => {
+            snapshot.docChanges().forEach(change => {
+              if (change.type === 'added') {
+                pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
+              }
+            });
+          });
+        };
 
     // ──────────────────────────────────────────────
     // JOIN CALL (Receiver side) — MAIN FIX HERE
@@ -576,13 +637,42 @@
           };
 
     // Copy button
-    copyBtn.onclick = () => {
-      if (!generatedCallId.value) return;
-      navigator.clipboard.writeText(generatedCallId.value).then(() => {
-        copyBtn.textContent = 'Copied!';
-        setTimeout(() => copyBtn.textContent = 'Copy', 2000);
-      });
-    };
-  </script>
+        copyBtn.onclick = () => {
+          if (!generatedCallId.value) return;
+          navigator.clipboard.writeText(generatedCallId.value).then(() => {
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => copyBtn.textContent = 'Copy', 2000);
+          });
+        };
+    
+        // SMS Modal Logic
+        smsBtn.onclick = () => {
+          if (!generatedCallId.value) return;
+          smsModal.classList.add('active');
+          smsPhoneInput.focus();
+        };
+    
+        cancelSmsBtn.onclick = () => {
+          smsModal.classList.remove('active');
+          smsPhoneInput.value = '';
+        };
+    
+        sendSmsBtn.onclick = () => {
+          var phone = smsPhoneInput.value.trim();
+          if (!phone) { 
+            alert('Please enter a mobile number.'); 
+            return; 
+          }
+          
+          var message = encodeURIComponent("[ Important Call ] Join my call using code: " + generatedCallId.value);
+          var separator = navigator.userAgent.match(/iPad|iPhone|iPod/) ? "&" : "?";
+          var smsUri = "sms:" + phone + separator + "body=" + message;
+          
+          window.open(smsUri, "_self");
+          
+          smsModal.classList.remove('active');
+          smsPhoneInput.value = '';
+        };
+      </script>
 </body>
 </html>
