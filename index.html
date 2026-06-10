@@ -10,14 +10,14 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0e0e10;
-      --surface: #18181c;
-      --border: #2a2a30;
+      --bg: #000432;
+      --surface: #000432;
+      --border: #ffffff;
       --accent: #00e5ff;
       --accent-dim: rgba(0, 229, 255, 0.12);
       --accent-glow: rgba(0, 229, 255, 0.4);
-      --text: #e8e8ec;
-      --muted: #6b6b78;
+      --text: #ffffff;
+            --muted: #ffffff;
       --danger: #ff4d6d;
       --success: #00e5a0;
       --warning: #ffd166;
@@ -25,9 +25,9 @@
 
     body {
       font-family: 'IBM Plex Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
+      background: #000432;
+            color: var(--text);
+            min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -78,14 +78,14 @@
       box-shadow: 0 0 12px var(--accent-glow);
     }
 
-    .logo-icon svg { color: var(--accent); }
+    .logo-icon svg { color: #ffffff; }
 
     h1 {
       font-family: 'IBM Plex Mono', monospace;
       font-size: 1.2rem;
       font-weight: 600;
-      color: var(--accent);
-      letter-spacing: 0.05em;
+      color: #ffffff;
+            letter-spacing: 0.05em;
     }
 
     .subtitle {
@@ -149,12 +149,12 @@
     .card:hover { border-color: rgba(255,255,255,0.12); }
 
     .card-label {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
+          font-family: 'IBM Plex Mono', monospace;
+          font-size: 0.7rem;
+          font-weight: 600;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: #ffffff;
       margin-bottom: 0.9rem;
       display: flex;
       align-items: center;
@@ -179,10 +179,10 @@
 
     input[type="text"] {
       flex: 1;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 0.65rem 0.9rem;
+      background: #000432;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.65rem 0.9rem;
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.85rem;
       color: var(--text);
@@ -200,8 +200,8 @@
 
     /* Buttons */
     .btn {
-      background: var(--accent-dim);
-      color: var(--accent);
+          background: var(--accent-dim);
+          color: #ffffff;
       border: 1px solid var(--accent);
       border-radius: 6px;
       padding: 0.65rem 1rem;
@@ -237,18 +237,18 @@
 
     /* Copy hint */
     .copy-hint {
-      font-size: 0.72rem;
-      color: var(--muted);
+          font-size: 0.72rem;
+          color: #ffffff;
       margin-top: 0.5rem;
       font-family: 'IBM Plex Mono', monospace;
     }
 
     /* Divider */
     .divider {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      color: var(--muted);
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          color: #ffffff;
       font-size: 0.75rem;
       font-family: 'IBM Plex Mono', monospace;
     }
@@ -290,9 +290,9 @@
     }
 
     .footer {
-          text-align: center;
-          font-size: 0.72rem;
-          color: var(--muted);
+              text-align: center;
+              font-size: 0.72rem;
+              color: #ffffff;
           font-family: 'IBM Plex Mono', monospace;
           padding-bottom: 0.5rem;
         }
@@ -301,7 +301,7 @@
         .modal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(14, 14, 16, 0.85);
+          background: rgba(0, 4, 50, 0.85);
           backdrop-filter: blur(4px);
           display: none;
           align-items: center;
@@ -329,8 +329,8 @@
           transform: translateY(0);
         }
         .modal-title {
-          font-family: 'IBM Plex Mono', monospace;
-          color: var(--accent);
+                  font-family: 'IBM Plex Mono', monospace;
+                  color: #ffffff;
           margin-bottom: 1rem;
           font-size: 1rem;
         }
@@ -401,7 +401,7 @@
         <div class="modal-title">Send Code via SMS</div>
         <input type="text" id="smsPhoneInput" placeholder="Enter mobile number" autocomplete="tel">
         <div class="modal-actions">
-          <button class="btn" id="cancelSmsBtn" style="background: transparent; color: var(--text); border-color: var(--border);">Cancel</button>
+          <button class="btn" id="cancelSmsBtn" style="background: transparent; color: #ffffff; border-color: var(--border);">Cancel</button>
           <button class="btn" id="sendSmsBtn">Send</button>
         </div>
       </div>
